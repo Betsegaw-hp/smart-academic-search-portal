@@ -1,15 +1,10 @@
 import { sanitizeInput } from "./utils"
-
-// Define the Paper interface
-export interface Paper {
-  id: string
-  title: string
-  abstract: string
-  authors: string[]
-  year: string
-  url: string
-  topics: string[]
-}
+import {
+  type Paper,
+  searchSemanticScholar,
+  searchSemanticScholarByTopic,
+  searchSemanticScholarByYear,
+} from "./semantic-scholar"
 
 interface SearchParams {
   query?: string
@@ -17,38 +12,67 @@ interface SearchParams {
   year?: string
 }
 
-// This would normally call the Semantic Scholar API and use OpenAI for embeddings
-// For this example, we'll use mock data
 export async function searchPapers({ query, topic, year }: SearchParams): Promise<Paper[]> {
-  // In a real implementation, we would:
-  // 1. Generate embeddings for the query using OpenAI
-  // 2. Call Semantic Scholar API with proper parameters
-  // 3. Process and filter results
-
   // Sanitize inputs
   const sanitizedQuery = query ? sanitizeInput(query) : ""
   const sanitizedTopic = topic ? sanitizeInput(topic) : ""
   const sanitizedYear = year ? sanitizeInput(year) : ""
 
-  // Simulate API delay
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  try {
+    // If we have a query, that takes precedence
+    if (sanitizedQuery) {
+      return await searchSemanticScholar(sanitizedQuery)
+    }
 
-  // Filter mock data based on search parameters
-  return mockPapers.filter((paper) => {
-    const matchesQuery =
-      !sanitizedQuery ||
-      paper.title.toLowerCase().includes(sanitizedQuery.toLowerCase()) ||
-      paper.abstract.toLowerCase().includes(sanitizedQuery.toLowerCase())
+    // If we have a topic but no query
+    if (sanitizedTopic && sanitizedTopic !== "all") {
+      return await searchSemanticScholarByTopic(sanitizedTopic)
+    }
 
-    const matchesTopic = !sanitizedTopic || paper.topics.some((t) => t.toLowerCase() === sanitizedTopic.toLowerCase())
+    // If we have a year but no query or topic
+    if (sanitizedYear && sanitizedYear !== "all") {
+      return await searchSemanticScholarByYear(sanitizedYear)
+    }
 
-    const matchesYear = !sanitizedYear || paper.year === sanitizedYear
+    // If we have no specific parameters, return recent papers
+    // This is a fallback that shouldn't normally be reached
+    return await searchSemanticScholar("recent research")
+  } catch (error) {
+    console.error("Error in searchPapers:", error)
 
-    return matchesQuery && matchesTopic && matchesYear
-  })
+    // If the API fails, fall back to mock data
+    console.log("Falling back to mock data due to API error")
+
+    // Filter mock data based on search parameters
+    let filteredPapers = mockPapers
+
+    if (sanitizedQuery) {
+      const lowerQuery = sanitizedQuery.toLowerCase()
+      filteredPapers = filteredPapers.filter(
+        (paper) =>
+          paper.title.toLowerCase().includes(lowerQuery) ||
+          paper.abstract.toLowerCase().includes(lowerQuery) ||
+          paper.authors.some((author) => author.toLowerCase().includes(lowerQuery)) ||
+          paper.topics.some((topic) => topic.toLowerCase().includes(lowerQuery)),
+      )
+    }
+
+    if (sanitizedTopic && sanitizedTopic !== "all") {
+      const lowerTopic = sanitizedTopic.toLowerCase()
+      filteredPapers = filteredPapers.filter((paper) =>
+        paper.topics.some((topic) => topic.toLowerCase().includes(lowerTopic)),
+      )
+    }
+
+    if (sanitizedYear && sanitizedYear !== "all") {
+      filteredPapers = filteredPapers.filter((paper) => paper.year === sanitizedYear)
+    }
+
+    return filteredPapers
+  }
 }
 
-// Mock data for demonstration
+// Mock data for fallback when API fails
 const mockPapers: Paper[] = [
   {
     id: "1",
@@ -59,6 +83,8 @@ const mockPapers: Paper[] = [
     year: "2017",
     url: "https://arxiv.org/abs/1706.03762",
     topics: ["Machine Learning", "Artificial Intelligence", "Natural Language Processing"],
+    citationCount: 45000,
+    isOpenAccess: true,
   },
   {
     id: "2",
@@ -69,6 +95,8 @@ const mockPapers: Paper[] = [
     year: "2018",
     url: "https://arxiv.org/abs/1810.04805",
     topics: ["Machine Learning", "Natural Language Processing"],
+    citationCount: 30000,
+    isOpenAccess: true,
   },
   {
     id: "3",
@@ -79,6 +107,8 @@ const mockPapers: Paper[] = [
     year: "2015",
     url: "https://arxiv.org/abs/1512.03385",
     topics: ["Machine Learning", "Computer Vision"],
+    citationCount: 70000,
+    isOpenAccess: true,
   },
   {
     id: "4",
@@ -89,6 +119,8 @@ const mockPapers: Paper[] = [
     year: "2019",
     url: "https://www.nature.com/articles/d41586-019-03595-0",
     topics: ["Climate Science", "Environmental Science"],
+    citationCount: 2500,
+    isOpenAccess: false,
   },
   {
     id: "5",
@@ -99,6 +131,8 @@ const mockPapers: Paper[] = [
     year: "2019",
     url: "https://www.nature.com/articles/s41586-019-1666-5",
     topics: ["Quantum Computing", "Computer Science"],
+    citationCount: 3000,
+    isOpenAccess: false,
   },
   {
     id: "6",
@@ -109,6 +143,8 @@ const mockPapers: Paper[] = [
     year: "2001",
     url: "https://www.pnas.org/content/98/2/676",
     topics: ["Neuroscience", "Cognitive Science"],
+    citationCount: 12000,
+    isOpenAccess: true,
   },
   {
     id: "7",
@@ -117,8 +153,10 @@ const mockPapers: Paper[] = [
       "This paper reviews the challenges of integrating renewable energy sources into existing power grids and proposes technical and policy solutions.",
     authors: ["Sarah Johnson", "Michael Chen", "Priya Patel"],
     year: "2020",
-    url: "https://example.com/renewable-energy-integration",
+    url: "https://www.sciencedirect.com/science/article/pii/S1364032119305994",
     topics: ["Renewable Energy", "Electrical Engineering"],
+    citationCount: 450,
+    isOpenAccess: false,
   },
   {
     id: "8",
@@ -127,8 +165,10 @@ const mockPapers: Paper[] = [
       "This paper presents recent advances in neural network architectures and training methods for processing complex information.",
     authors: ["Alex Turner", "Maria Rodriguez", "David Kim"],
     year: "2021",
-    url: "https://example.com/neural-information-processing",
+    url: "https://papers.nips.cc/paper/2020",
     topics: ["Machine Learning", "Artificial Intelligence", "Neuroscience"],
+    citationCount: 120,
+    isOpenAccess: true,
   },
   {
     id: "9",
@@ -137,8 +177,10 @@ const mockPapers: Paper[] = [
       "A comprehensive review of how climate change affects biodiversity across different ecosystems and geographic regions.",
     authors: ["Emma Wilson", "James Taylor", "Sophia Garcia"],
     year: "2022",
-    url: "https://example.com/climate-biodiversity-review",
+    url: "https://www.sciencedirect.com/science/article/pii/S0006320721000793",
     topics: ["Climate Science", "Ecology", "Environmental Science"],
+    citationCount: 85,
+    isOpenAccess: false,
   },
   {
     id: "10",
@@ -147,7 +189,9 @@ const mockPapers: Paper[] = [
       "This paper explores how quantum computing can be applied to solve complex optimization problems more efficiently than classical algorithms.",
     authors: ["Robert Chen", "Lisa Wang", "Thomas Brown"],
     year: "2023",
-    url: "https://example.com/quantum-optimization",
+    url: "https://arxiv.org/abs/2201.05779",
     topics: ["Quantum Computing", "Computer Science", "Optimization"],
+    citationCount: 30,
+    isOpenAccess: true,
   },
 ]

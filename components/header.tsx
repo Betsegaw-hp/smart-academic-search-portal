@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ModeToggle } from "@/components/mode-toggle"
-import { GraduationCap } from "lucide-react"
+import { BookOpen } from "lucide-react"
 
 export default function Header() {
   return (
@@ -8,8 +8,10 @@ export default function Header() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center gap-2">
-            <GraduationCap className="h-6 w-6" />
-            <span className="font-bold">Academic Papers Search</span>
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-sage-300 text-sage-800">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <span className="font-display font-medium text-lg">Scholar Search</span>
           </Link>
         </div>
         <div className="flex items-center gap-4">

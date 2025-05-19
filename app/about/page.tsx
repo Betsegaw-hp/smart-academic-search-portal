@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Shield, Search, Zap, Lock } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "About | Academic Papers Search",
+  title: "About | Scholar Search",
   description: "Learn about our secure, privacy-focused academic paper search engine.",
 }
 
@@ -13,12 +13,12 @@ export default function AboutPage() {
   return (
     <main className="container mx-auto px-4 py-12">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-4xl font-bold mb-6">About Academic Papers Search</h1>
+        <h1 className="text-4xl font-bold mb-6 font-display">About Scholar Search</h1>
 
         <div className="prose dark:prose-invert max-w-none mb-12">
           <p className="text-lg">
-            Academic Papers Search is a secure, privacy-focused search portal for academic research papers. We use
-            AI-powered semantic search to help researchers find relevant papers based on concepts, not just keywords.
+            Scholar Search is a secure, privacy-focused search portal for academic research papers. We use the Semantic
+            Scholar API to help researchers find relevant papers across various disciplines.
           </p>
 
           <h2>Our Mission</h2>
@@ -29,8 +29,14 @@ export default function AboutPage() {
 
           <h2>Data Sources</h2>
           <p>
-            We use the Semantic Scholar API to access a vast database of academic papers across various disciplines. Our
-            search is enhanced with AI to provide more relevant results.
+            We use the Semantic Scholar API to access a vast database of academic papers across various disciplines.
+            Semantic Scholar is a free, AI-powered research tool for scientific literature maintained by the Allen
+            Institute for AI.
+          </p>
+
+          <p>
+            For additional search capabilities, we also offer integration with DuckDuckGo, a privacy-focused search
+            engine that doesn't track users or store personal information.
           </p>
         </div>
 
@@ -49,11 +55,14 @@ export default function AboutPage() {
           <Card>
             <CardHeader>
               <Search className="h-8 w-8 mb-2 text-primary" />
-              <CardTitle>Semantic Search</CardTitle>
-              <CardDescription>Find papers based on concepts, not just keywords</CardDescription>
+              <CardTitle>Real-Time Search</CardTitle>
+              <CardDescription>Find papers from millions of academic sources</CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Our AI-powered search understands the meaning behind your query, delivering more relevant results.</p>
+              <p>
+                Our search connects directly to the Semantic Scholar database, giving you access to millions of academic
+                papers.
+              </p>
             </CardContent>
           </Card>
 
@@ -82,7 +91,9 @@ export default function AboutPage() {
 
         <div className="text-center">
           <Link href="/">
-            <Button size="lg">Start Searching</Button>
+            <Button size="lg" className="rounded-xl">
+              Start Searching
+            </Button>
           </Link>
         </div>
       </div>
